@@ -20,28 +20,34 @@ class Player {
 
 class Game {
   constructor() {
-    this.grid = Array(10).fill().map(() => Array(10).fill(null));
+    this.grid = Array(10)
+      .fill()
+      .map(() => Array(10).fill(null));
     this.players = [];
     this.currentPlayerIndex = 0;
     this.round = 1;
     this.gameOver = false;
     this.stats = {
       gamesPlayed: 0,
-      wins: {}
+      wins: {},
     };
     this.currentPlayer = null;
   }
 
   addPlayer(socketId, name) {
-    const edges = ['top', 'right', 'bottom', 'left'];
+    const edges = ["top", "right", "bottom", "left"];
     const edge = edges[this.players.length % 4];
-    const player = new Player(socketId, name || `Player ${this.players.length + 1}`, edge);
+    const player = new Player(
+      socketId,
+      name || `Player ${this.players.length + 1}`,
+      edge
+    );
     this.players.push(player);
     return player;
   }
 
   addMonster(playerId, type, position) {
-    const player = this.players.find(p => p.id === playerId);
+    const player = this.players.find((p) => p.id === playerId);
     if (!player || player.eliminated) return false;
 
     if (!this.isOnEdge(position, player.edge)) {
@@ -60,16 +66,21 @@ class Game {
 
   isOnEdge(position, edge) {
     switch (edge) {
-      case 'top': return position.row === 0;
-      case 'right': return position.col === 9;
-      case 'bottom': return position.row === 9;
-      case 'left': return position.col === 0;
-      default: return false;
+      case "top":
+        return position.row === 0;
+      case "right":
+        return position.col === 9;
+      case "bottom":
+        return position.row === 9;
+      case "left":
+        return position.col === 0;
+      default:
+        return false;
     }
   }
 
   moveMonster(playerId, from, to) {
-    const player = this.players.find(p => p.id === playerId);
+    const player = this.players.find((p) => p.id === playerId);
     if (!player || player.eliminated) return false;
 
     const monster = this.grid[from.row]?.[from.col];
@@ -126,8 +137,8 @@ class Game {
   }
 
   handleConflict(attacker, defender, position) {
-    const attackerPlayer = this.players.find(p => p.id === attacker.playerId);
-    const defenderPlayer = this.players.find(p => p.id === defender.playerId);
+    const attackerPlayer = this.players.find((p) => p.id === attacker.playerId);
+    const defenderPlayer = this.players.find((p) => p.id === defender.playerId);
 
     if (attacker.type === defender.type) {
       this.removeMonster(attacker, attackerPlayer);
@@ -138,9 +149,9 @@ class Game {
 
     let winner, loser;
     if (
-      (attacker.type === 'vampire' && defender.type === 'werewolf') ||
-      (attacker.type === 'werewolf' && defender.type === 'ghost') ||
-      (attacker.type === 'ghost' && defender.type === 'vampire')
+      (attacker.type === "vampire" && defender.type === "werewolf") ||
+      (attacker.type === "werewolf" && defender.type === "ghost") ||
+      (attacker.type === "ghost" && defender.type === "vampire")
     ) {
       winner = attacker;
       loser = defender;
@@ -149,16 +160,19 @@ class Game {
       loser = attacker;
     }
 
-    this.removeMonster(loser, loser.playerId === attacker.playerId ? attackerPlayer : defenderPlayer);
+    this.removeMonster(
+      loser,
+      loser.playerId === attacker.playerId ? attackerPlayer : defenderPlayer
+    );
     this.grid[position.row][position.col] = winner;
     winner.position = position;
     return true;
   }
 
   removeMonster(monster, player) {
-    player.monsters = player.monsters.filter(m => m.id !== monster.id);
+    player.monsters = player.monsters.filter((m) => m.id !== monster.id);
     player.monstersLost++;
-    
+
     if (player.monstersLost >= 10) {
       player.eliminated = true;
       this.checkGameOver();
@@ -166,59 +180,64 @@ class Game {
   }
 
   checkGameOver() {
-    const activePlayers = this.players.filter(p => !p.eliminated);
+    const activePlayers = this.players.filter((p) => !p.eliminated);
     if (activePlayers.length === 1) {
       this.gameOver = true;
-      this.stats.wins[activePlayers[0].id] = (this.stats.wins[activePlayers[0].id] || 0) + 1;
+      this.stats.wins[activePlayers[0].id] =
+        (this.stats.wins[activePlayers[0].id] || 0) + 1;
       this.stats.gamesPlayed++;
     }
   }
 
-nextTurn() {
-  if (this.gameOver) return;
+  nextTurn() {
+    if (this.gameOver) return;
 
-  const activePlayers = this.players.filter(p => !p.eliminated);
-  if (activePlayers.length === 0) {
-    this.currentPlayer = null;
-    return;
+    const activePlayers = this.players.filter((p) => !p.eliminated);
+    if (activePlayers.length === 0) {
+      this.currentPlayer = null;
+      return;
+    }
+
+    if (!this.currentPlayer) {
+      this.currentPlayer = activePlayers[0];
+      return;
+    }
+
+    const currentIndex = activePlayers.findIndex(
+      (p) => p.id === this.currentPlayer.id
+    );
+    let nextIndex = (currentIndex + 1) % activePlayers.length;
+
+    if (nextIndex === 0) {
+      this.round++;
+    }
+
+    this.currentPlayer = activePlayers[nextIndex];
   }
 
-  if (!this.currentPlayer) {
-    this.currentPlayer = activePlayers[0];
-    return;
+  getStateForPlayer(playerId) {
+    return {
+      grid: this.grid,
+      players: this.players.map((p) => ({
+        id: p.id,
+        name: p.name,
+        monsters: p.monsters,
+        eliminated: p.eliminated,
+        monstersLost: p.monstersLost,
+      })),
+      currentPlayer: this.currentPlayer
+        ? {
+            id: this.currentPlayer.id,
+            name: this.currentPlayer.name,
+            monsters: this.currentPlayer.monsters,
+          }
+        : null,
+      round: this.round,
+      gameOver: this.gameOver,
+      stats: this.stats,
+      yourPlayerId: playerId,
+    };
   }
-
-  const currentIndex = activePlayers.findIndex(p => p.id === this.currentPlayer.id);
-  let nextIndex = (currentIndex + 1) % activePlayers.length;
-
-  if (nextIndex === 0) {
-    this.round++;
-  }
-
-  this.currentPlayer = activePlayers[nextIndex];
-}
-
-getStateForPlayer(playerId) {
-  return {
-    grid: this.grid,
-    players: this.players.map(p => ({
-      id: p.id,
-      name: p.name,
-      monsters: p.monsters,
-      eliminated: p.eliminated,
-      monstersLost: p.monstersLost
-    })),
-    currentPlayer: this.currentPlayer ? {
-      id: this.currentPlayer.id,
-      name: this.currentPlayer.name,
-      monsters: this.currentPlayer.monsters
-    } : null,
-    round: this.round,
-    gameOver: this.gameOver,
-    stats: this.stats,
-    yourPlayerId: playerId
-  };
-}
 }
 
 module.exports = Game;

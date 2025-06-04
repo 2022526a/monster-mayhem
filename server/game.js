@@ -3,6 +3,7 @@ class Monster {
     this.type = type;
     this.playerId = playerId;
     this.position = position;
+    this.id = `${playerId}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
   }
 }
 
@@ -12,6 +13,8 @@ class Player {
     this.name = name;
     this.edge = edge;
     this.monsters = [];
+    this.eliminated = false;
+    this.monstersLost = 0;
   }
 }
 
@@ -20,19 +23,26 @@ class Game {
     this.grid = Array(10).fill().map(() => Array(10).fill(null));
     this.players = [];
     this.currentPlayerIndex = 0;
+    this.round = 1;
+    this.gameOver = false;
+    this.stats = {
+      gamesPlayed: 0,
+      wins: {}
+    };
+    this.currentPlayer = null;
   }
 
   addPlayer(socketId, name) {
     const edges = ['top', 'right', 'bottom', 'left'];
     const edge = edges[this.players.length % 4];
-    const player = new Player(socketId, name, edge);
+    const player = new Player(socketId, name || `Player ${this.players.length + 1}`, edge);
     this.players.push(player);
     return player;
   }
 
   addMonster(playerId, type, position) {
     const player = this.players.find(p => p.id === playerId);
-    if (!player) return false;
+    if (!player || player.eliminated) return false;
 
     if (!this.isOnEdge(position, player.edge)) {
       return false;
@@ -58,9 +68,9 @@ class Game {
     }
   }
 
- moveMonster(playerId, from, to) {
+  moveMonster(playerId, from, to) {
     const player = this.players.find(p => p.id === playerId);
-    if (!player) return false;
+    if (!player || player.eliminated) return false;
 
     const monster = this.grid[from.row]?.[from.col];
     if (!monster || monster.playerId !== playerId) return false;
@@ -115,31 +125,11 @@ class Game {
     return true;
   }
 
-  nextTurn() {
-    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
-    if (this.currentPlayerIndex === 0) {
-      this.round++;
-    }
-    return this.players[this.currentPlayerIndex];
-  }
-
-  getStateForPlayer(playerId) {
-    return {
-      grid: this.grid,
-      players: this.players,
-      currentPlayer: this.players[this.currentPlayerIndex],
-      round: this.round,
-      yourPlayerId: playerId
-    };
-  }
-
-
   handleConflict(attacker, defender, position) {
     const attackerPlayer = this.players.find(p => p.id === attacker.playerId);
     const defenderPlayer = this.players.find(p => p.id === defender.playerId);
 
     if (attacker.type === defender.type) {
-      // Both monsters die if same type
       this.removeMonster(attacker, attackerPlayer);
       this.removeMonster(defender, defenderPlayer);
       this.grid[position.row][position.col] = null;
@@ -167,7 +157,7 @@ class Game {
 
   removeMonster(monster, player) {
     player.monsters = player.monsters.filter(m => m.id !== monster.id);
-    player.monstersLost = (player.monstersLost || 0) + 1;
+    player.monstersLost++;
     
     if (player.monstersLost >= 10) {
       player.eliminated = true;
@@ -179,29 +169,56 @@ class Game {
     const activePlayers = this.players.filter(p => !p.eliminated);
     if (activePlayers.length === 1) {
       this.gameOver = true;
-      this.stats.gamesPlayed++;
       this.stats.wins[activePlayers[0].id] = (this.stats.wins[activePlayers[0].id] || 0) + 1;
+      this.stats.gamesPlayed++;
     }
   }
 
-  // Update getStateForPlayer to include gameOver and stats
-  getStateForPlayer(playerId) {
-    return {
-      grid: this.grid,
-      players: this.players.map(p => ({
-        id: p.id,
-        name: p.name,
-        monsters: p.monsters,
-        eliminated: p.eliminated,
-        monstersLost: p.monstersLost
-      })),
-      currentPlayer: this.players[this.currentPlayerIndex],
-      round: this.round,
-      gameOver: this.gameOver,
-      stats: this.stats,
-      yourPlayerId: playerId
-    };
+nextTurn() {
+  if (this.gameOver) return;
+
+  const activePlayers = this.players.filter(p => !p.eliminated);
+  if (activePlayers.length === 0) {
+    this.currentPlayer = null;
+    return;
   }
-  
+
+  if (!this.currentPlayer) {
+    this.currentPlayer = activePlayers[0];
+    return;
   }
+
+  const currentIndex = activePlayers.findIndex(p => p.id === this.currentPlayer.id);
+  let nextIndex = (currentIndex + 1) % activePlayers.length;
+
+  if (nextIndex === 0) {
+    this.round++;
+  }
+
+  this.currentPlayer = activePlayers[nextIndex];
+}
+
+getStateForPlayer(playerId) {
+  return {
+    grid: this.grid,
+    players: this.players.map(p => ({
+      id: p.id,
+      name: p.name,
+      monsters: p.monsters,
+      eliminated: p.eliminated,
+      monstersLost: p.monstersLost
+    })),
+    currentPlayer: this.currentPlayer ? {
+      id: this.currentPlayer.id,
+      name: this.currentPlayer.name,
+      monsters: this.currentPlayer.monsters
+    } : null,
+    round: this.round,
+    gameOver: this.gameOver,
+    stats: this.stats,
+    yourPlayerId: playerId
+  };
+}
+}
+
 module.exports = Game;

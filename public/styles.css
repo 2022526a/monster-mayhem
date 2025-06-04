@@ -48,3 +48,28 @@
   background: #e3f2fd;
   border-left: 3px solid #2196F3;
 }
+
+.cell.available-move {
+  background-color: rgba(100, 255, 100, 0.3);
+  cursor: pointer;
+}
+
+.cell.your-monster {
+  border: 2px solid #4CAF50;
+}
+
+#current-player.your-turn {
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+#end-turn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #FF5722;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}

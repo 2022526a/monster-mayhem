@@ -57,6 +57,80 @@ class Game {
       default: return false;
     }
   }
-}
 
+ moveMonster(playerId, from, to) {
+    const player = this.players.find(p => p.id === playerId);
+    if (!player) return false;
+
+    const monster = this.grid[from.row]?.[from.col];
+    if (!monster || monster.playerId !== playerId) return false;
+
+    if (!this.isValidMove(from, to)) return false;
+
+    if (!this.isPathClear(from, to)) return false;
+
+    const targetMonster = this.grid[to.row][to.col];
+    if (targetMonster) {
+      return this.handleConflict(monster, targetMonster, to);
+    }
+
+    this.grid[from.row][from.col] = null;
+    this.grid[to.row][to.col] = monster;
+    monster.position = to;
+    return true;
+  }
+
+  isValidMove(from, to) {
+    const rowDiff = Math.abs(to.row - from.row);
+    const colDiff = Math.abs(to.col - from.col);
+
+    if ((rowDiff === 0 || colDiff === 0) && rowDiff + colDiff > 0) {
+      return true;
+    }
+
+    if (rowDiff === colDiff && rowDiff <= 2) {
+      return true;
+    }
+
+    return false;
+  }
+
+  isPathClear(from, to) {
+    if (from.row !== to.row && from.col !== to.col) return true;
+
+    const rowStep = from.row < to.row ? 1 : from.row > to.row ? -1 : 0;
+    const colStep = from.col < to.col ? 1 : from.col > to.col ? -1 : 0;
+
+    let currentRow = from.row + rowStep;
+    let currentCol = from.col + colStep;
+
+    while (currentRow !== to.row || currentCol !== to.col) {
+      if (this.grid[currentRow][currentCol] !== null) {
+        return false;
+      }
+      currentRow += rowStep;
+      currentCol += colStep;
+    }
+
+    return true;
+  }
+
+  nextTurn() {
+    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+    if (this.currentPlayerIndex === 0) {
+      this.round++;
+    }
+    return this.players[this.currentPlayerIndex];
+  }
+
+  getStateForPlayer(playerId) {
+    return {
+      grid: this.grid,
+      players: this.players,
+      currentPlayer: this.players[this.currentPlayerIndex],
+      round: this.round,
+      yourPlayerId: playerId
+    };
+  }
+  }
 module.exports = Game;

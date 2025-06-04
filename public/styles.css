@@ -109,3 +109,75 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
+/* Movement indicators */
+.cell.straight-move::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(100, 255, 100, 0.5);
+  border-radius: 50%;
+}
+
+.cell.diagonal-move::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: rgba(100, 200, 255, 0.5);
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+/* Monster selection */
+.monster-btn.selected {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* Game header */
+#game-header {
+  display: flex;
+  justify-content: space-between;
+  background: #f0f0f0;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+#game-status, #player-stats {
+  display: flex;
+  gap: 15px;
+}
+
+#game-status p, #player-stats p {
+  margin: 0;
+  padding: 5px 10px;
+  background: white;
+  border-radius: 4px;
+}
+
+/* Current player highlight */
+#current-player.your-turn {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { background-color: #fff; }
+  50% { background-color: #e8f5e9; }
+  100% { background-color: #fff; }
+}
+
+.monster-btn {
+  transition: all 0.2s ease;
+}
+
+.monster-btn:hover {
+  transform: translateY(-2px);
+}
+
+#end-turn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}

@@ -1,3 +1,55 @@
+body {
+  font-family: 'Arial', sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+#lobby, #game-container, #game-over {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#lobby {
+  text-align: center;
+}
+
+#join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+#join-form input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+#join-form button {
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#game-container {
+  display: none;
+}
+
+#game-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
 #game-board {
   display: grid;
   grid-template-columns: repeat(10, 40px);
@@ -13,7 +65,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
   background-color: #f9f9f9;
+}
+
+.cell.available-move {
+  background-color: rgba(100, 255, 100, 0.3);
+}
+
+.cell.your-monster {
+  border: 2px solid #4CAF50;
 }
 
 .monster {
@@ -28,34 +89,58 @@
   font-size: 12px;
 }
 
-.vampire { background-color: #8B0000; }
-.werewolf { background-color: #228B22; }
-.ghost { background-color: #4B0082; }
-
-#player-list {
-  list-style: none;
-  padding: 0;
+.vampire {
+  background-color: #8B0000;
 }
 
-#player-list li {
-  padding: 8px;
-  margin: 4px 0;
-  background: #f5f5f5;
+.werewolf {
+  background-color: #228B22;
+}
+
+.ghost {
+  background-color: #4B0082;
+}
+
+#controls {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f0f0f0;
   border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-#player-list li.you {
-  background: #e3f2fd;
-  border-left: 3px solid #2196F3;
+#monster-selection {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.cell.available-move {
-  background-color: rgba(100, 255, 100, 0.3);
+.monster-btn, #place-monster, #end-turn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.cell.your-monster {
-  border: 2px solid #4CAF50;
+.monster-btn {
+  background-color: #ddd;
+}
+
+.monster-btn.selected {
+  background-color: #333;
+  color: white;
+}
+
+#place-monster, #end-turn {
+  background-color: #2196F3;
+  color: white;
+}
+
+#end-turn {
+  align-self: flex-end;
+  background-color: #FF9800;
 }
 
 #current-player.your-turn {
@@ -63,20 +148,69 @@
   color: #4CAF50;
 }
 
-#end-turn {
-  margin-top: 15px;
+#game-over {
+  display: none;
+  text-align: center;
+  margin-top: 20px;
+}
+
+#play-again {
   padding: 10px 20px;
-  background-color: #FF5722;
+  background-color: #4CAF50;
   color: white;
   border: none;
   border-radius: 4px;
-  font-weight: bold;
   cursor: pointer;
+  margin-top: 15px;
+}
+
+
+#players-panel {
+  position: fixed;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    padding: 15px;
+    border-radius: 8px;
+    width: 200px;
+}
+#players-panel h3{
+  margin-bottom: 0px;
+  padding: 0px;
+}
+
+#player-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  z-index: 5;
+}
+
+#player-list li {
+  padding: 8px;
+  margin: 4px 0;
+  border-radius: 4px;
+  background: #f5f5f5;
+  display: flex;
+  justify-content: space-between;
+}
+
+#player-list li.you {
+  background: #e3f2fd;
+  border-left: 3px solid #2196F3;
 }
 
 #player-list li.eliminated {
   opacity: 0.6;
   background: #ffebee;
+}
+
+.you-badge {
+  background: #2196F3;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
 }
 
 .eliminated-badge {
@@ -87,27 +221,8 @@
   font-size: 0.8em;
 }
 
-#game-over {
-  display: none;
-  text-align: center;
-  margin-top: 20px;
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-}
-
-#game-over-message {
-  font-size: 24px;
-  margin-bottom: 15px;
-}
-
-#play-again {
-  padding: 10px 20px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.cell.available-move {
+  position: relative;
 }
 
 .cell.straight-move::after {
@@ -129,51 +244,23 @@
   transform: rotate(45deg);
 }
 
-.monster-btn.selected {
-  transform: scale(1.05);
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
-}
-
-#game-header {
-  display: flex;
-  justify-content: space-between;
-  background: #f0f0f0;
-  padding: 10px 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-#game-status, #player-stats {
-  display: flex;
-  gap: 15px;
-}
-
-#game-status p, #player-stats p {
-  margin: 0;
-  padding: 5px 10px;
-  background: white;
+#end-turn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #FF5722;
+  color: white;
+  border: none;
   border-radius: 4px;
-}
-
-#current-player.your-turn {
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% { background-color: #fff; }
-  50% { background-color: #e8f5e9; }
-  100% { background-color: #fff; }
-}
-
-.monster-btn {
-  transition: all 0.2s ease;
-}
-
-.monster-btn:hover {
-  transform: translateY(-2px);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 #end-turn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background-color: #E64A19;
+}
+
+#end-turn:disabled {
+  background-color: #9E9E9E;
+  cursor: not-allowed;
 }

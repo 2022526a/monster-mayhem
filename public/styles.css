@@ -1,0 +1,50 @@
+#game-board {
+  display: grid;
+  grid-template-columns: repeat(10, 40px);
+  grid-template-rows: repeat(10, 40px);
+  gap: 2px;
+  margin: 20px 0;
+}
+
+.cell {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f9f9f9;
+}
+
+.monster {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.vampire { background-color: #8B0000; }
+.werewolf { background-color: #228B22; }
+.ghost { background-color: #4B0082; }
+
+#player-list {
+  list-style: none;
+  padding: 0;
+}
+
+#player-list li {
+  padding: 8px;
+  margin: 4px 0;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+#player-list li.you {
+  background: #e3f2fd;
+  border-left: 3px solid #2196F3;
+}

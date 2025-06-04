@@ -132,5 +132,76 @@ class Game {
       yourPlayerId: playerId
     };
   }
+
+
+  handleConflict(attacker, defender, position) {
+    const attackerPlayer = this.players.find(p => p.id === attacker.playerId);
+    const defenderPlayer = this.players.find(p => p.id === defender.playerId);
+
+    if (attacker.type === defender.type) {
+      // Both monsters die if same type
+      this.removeMonster(attacker, attackerPlayer);
+      this.removeMonster(defender, defenderPlayer);
+      this.grid[position.row][position.col] = null;
+      return true;
+    }
+
+    let winner, loser;
+    if (
+      (attacker.type === 'vampire' && defender.type === 'werewolf') ||
+      (attacker.type === 'werewolf' && defender.type === 'ghost') ||
+      (attacker.type === 'ghost' && defender.type === 'vampire')
+    ) {
+      winner = attacker;
+      loser = defender;
+    } else {
+      winner = defender;
+      loser = attacker;
+    }
+
+    this.removeMonster(loser, loser.playerId === attacker.playerId ? attackerPlayer : defenderPlayer);
+    this.grid[position.row][position.col] = winner;
+    winner.position = position;
+    return true;
+  }
+
+  removeMonster(monster, player) {
+    player.monsters = player.monsters.filter(m => m.id !== monster.id);
+    player.monstersLost = (player.monstersLost || 0) + 1;
+    
+    if (player.monstersLost >= 10) {
+      player.eliminated = true;
+      this.checkGameOver();
+    }
+  }
+
+  checkGameOver() {
+    const activePlayers = this.players.filter(p => !p.eliminated);
+    if (activePlayers.length === 1) {
+      this.gameOver = true;
+      this.stats.gamesPlayed++;
+      this.stats.wins[activePlayers[0].id] = (this.stats.wins[activePlayers[0].id] || 0) + 1;
+    }
+  }
+
+  // Update getStateForPlayer to include gameOver and stats
+  getStateForPlayer(playerId) {
+    return {
+      grid: this.grid,
+      players: this.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        monsters: p.monsters,
+        eliminated: p.eliminated,
+        monstersLost: p.monstersLost
+      })),
+      currentPlayer: this.players[this.currentPlayerIndex],
+      round: this.round,
+      gameOver: this.gameOver,
+      stats: this.stats,
+      yourPlayerId: playerId
+    };
+  }
+  
   }
 module.exports = Game;

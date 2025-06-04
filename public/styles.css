@@ -73,3 +73,39 @@
   font-weight: bold;
   cursor: pointer;
 }
+
+#player-list li.eliminated {
+  opacity: 0.6;
+  background: #ffebee;
+}
+
+.eliminated-badge {
+  background: #f44336;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
+}
+
+#game-over {
+  display: none;
+  text-align: center;
+  margin-top: 20px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+}
+
+#game-over-message {
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+#play-again {
+  padding: 10px 20px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
